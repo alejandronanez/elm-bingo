@@ -33,10 +33,10 @@ initialModel =
 
 initialEntries : List Entry
 initialEntries =
-    [ Entry 1 "Future-Proof" 100 False
+    [ Entry 3 "In The Cloud" 300 False
+    , Entry 1 "Future-Proof" 100 False
+    , Entry 4 "Rock-Star Ninja" 400 False
     , Entry 2 "Doing Agile" 200 False
-    , Entry 3 "In The Cloud" 300 False
-    , Entry 4 "Rock-Start Ninga" 400 False
     ]
 
 
@@ -47,6 +47,7 @@ initialEntries =
 type Msg
     = NewGame
     | Mark Int
+    | Sort
 
 
 update : Msg -> Model -> Model
@@ -68,6 +69,9 @@ update msg model =
             in
                 { model | entries = List.map markEntry model.entries }
 
+        Sort ->
+            { model | entries = List.sortBy .points model.entries }
+
 
 
 -- VIEW
@@ -76,6 +80,11 @@ update msg model =
 playerInfo : String -> Int -> String
 playerInfo name gameNumber =
     name ++ " - Game #" ++ (toString gameNumber)
+
+
+allEntriesMarked : List Entry -> Bool
+allEntriesMarked entries =
+    List.all .marked entries
 
 
 viewPlayer : String -> Int -> Html Msg
@@ -119,14 +128,42 @@ viewEntryList entries =
         |> ul []
 
 
+sumMarkedPoints : List Entry -> Int
+sumMarkedPoints entries =
+    -- let
+    --     markedEntries =
+    --         List.filter .marked entries
+    --         -- List.filter (\e -> e.marked) entries
+    --     pointValues =
+    --         List.map .points markedEntries
+    -- in
+    --     List.sum pointValues
+    entries
+        |> List.filter .marked
+        |> List.map .points
+        |> List.sum
+
+
+viewScore : Int -> Html Msg
+viewScore sum =
+    div
+        [ class "score" ]
+        [ span [ class "label" ] [ text "Score" ]
+        , span [ class "value" ] [ text (toString sum) ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "content" ]
         [ viewHeader "BUZZWORD BINGO"
         , viewPlayer model.name model.gameNumber
         , viewEntryList model.entries
+        , viewScore (sumMarkedPoints model.entries)
         , div [ class "button-group" ]
-            [ button [ onClick NewGame ] [ text "New Game" ] ]
+            [ button [ onClick NewGame ] [ text "New Game" ]
+            , button [ onClick Sort ] [ text "Sort" ]
+            ]
         , div [ class "debug" ] [ text (toString model) ]
         , viewFooter
         ]
